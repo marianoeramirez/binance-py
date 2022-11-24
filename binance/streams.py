@@ -2,9 +2,8 @@ import asyncio
 from enum import Enum
 from typing import Optional, List
 
-from .client import AsyncClient, Client
-from .enums import ContractType
-from .enums import FuturesType
+from .client import AsyncClient
+from .enums import FuturesType, SocketType, ContractType
 
 from .sockets import KeepAliveWebsocket, ReconnectingWebsocket
 

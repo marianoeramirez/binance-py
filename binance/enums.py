@@ -78,3 +78,10 @@ class ContractType(Enum):
     PERPETUAL = "perpetual"
     CURRENT_QUARTER = "current_quarter"
     NEXT_QUARTER = "next_quarter"
+
+class SocketType(Enum):
+    SPOT = 'Spot'
+    USD_M_FUTURES = 'USD_M_Futures'
+    COIN_M_FUTURES = 'Coin_M_Futures'
+    OPTIONS = 'Vanilla_Options'
+    ACCOUNT = 'Account'
