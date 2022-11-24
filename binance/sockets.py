@@ -13,10 +13,11 @@ from .enums import SocketType
 from websockets.exceptions import ConnectionClosedError, ConnectionClosed
 
 from .client import AsyncClient
-from .exceptions import BinanceWebsocketUnableToConnect
+from .exceptions import WebsocketUnableToConnect
 
 KEEPALIVE_TIMEOUT = 5 * 60  # 5 minutes
 
+logger = logging.getLogger(__name__)
 
 class WSListenerState(Enum):
     INITIALISING = 'Initialising'
@@ -47,7 +48,6 @@ class ReconnectingWebsocket:
         self.client = client
         self.socket_type = socket_type
         self._loop = asyncio.get_event_loop()
-        self._log = logging.getLogger(__name__)
         self._path = path
         self._url = url
         self._exit_coro = exit_coro
@@ -82,7 +82,7 @@ class ReconnectingWebsocket:
             await self._conn.__aexit__(exc_type, exc_val, exc_tb)
         self.ws = None
         if not self._handle_read_loop:
-            self._log.error("CANCEL read_loop")
+            logger.error("CANCEL read_loop")
             await self._kill_read_loop()
 
     def get_url(self):
@@ -91,13 +91,13 @@ class ReconnectingWebsocket:
     async def connect(self):
         await self._before_connect()
         ws_url = self.get_url()
-        self._log.info(f"WSURL: {ws_url}")
+        logger.info(f"WSURL: {ws_url}")
         self._conn = ws.connect(ws_url, close_timeout=0.1)  # type: ignore
 
         try:
             self.ws = await self._conn.__aenter__()
         except Exception as e:  # noqa
-            self._log.error(e)
+            logger.error(e)
             await self._reconnect()
             return
         self.ws_state = WSListenerState.STREAMING
@@ -116,7 +116,7 @@ class ReconnectingWebsocket:
         pass
 
     async def _after_connect(self):
-        self._log.info("Connected")
+        logger.info("Connected")
         for callback in self._events[EventType.ON_CONNECT]:
             await callback()
 
@@ -129,7 +129,7 @@ class ReconnectingWebsocket:
         try:
             return json.loads(evt)
         except ValueError:
-            self._log.debug(f'error parsing evt json:{evt}')
+            logger.debug(f'error parsing evt json:{evt}')
             return None
 
     async def _handle_message(self, evt):
@@ -138,7 +138,7 @@ class ReconnectingWebsocket:
             await callback(msg)
 
     async def _read_loop(self):
-        self._log.debug(f"Start read loop")
+        logger.debug(f"Start read loop")
         try:
             while True:
                 try:
@@ -159,22 +159,22 @@ class ReconnectingWebsocket:
                         res = await asyncio.wait_for(self.ws.recv(), timeout=self.TIMEOUT)
                         await self._handle_message(res)
                 except asyncio.TimeoutError:
-                    self._log.debug(f"no message in {self.TIMEOUT} seconds")
+                    logger.debug(f"no message in {self.TIMEOUT} seconds")
                     # _no_message_received_reconnect
                 except asyncio.CancelledError as e:
-                    self._log.debug(f"cancelled error {e}")
+                    logger.debug(f"cancelled error {e}")
                     break
                 except asyncio.IncompleteReadError as e:
-                    self._log.debug(f"incomplete read error ({e})")
+                    logger.debug(f"incomplete read error ({e})")
                 except ConnectionClosedError as e:
-                    self._log.debug(f"connection close error ({e})")
+                    logger.debug(f"connection close error ({e})")
                 except gaierror as e:
-                    self._log.debug(f"DNS Error ({e})")
-                except BinanceWebsocketUnableToConnect as e:
-                    self._log.debug(f"BinanceWebsocketUnableToConnect ({e})")
+                    logger.debug(f"DNS Error ({e})")
+                except WebsocketUnableToConnect as e:
+                    logger.debug(f"WebsocketUnableToConnect ({e})")
                     break
                 except Exception as e:
-                    self._log.debug(f"Unknown exception ({e})")
+                    logger.debug(f"Unknown exception ({e})")
                     continue
         finally:
             self._handle_read_loop = None  # Signal the coro is stopped
@@ -184,15 +184,15 @@ class ReconnectingWebsocket:
         await self.before_reconnect()
         if self._reconnects < self.MAX_RECONNECTS:
             reconnect_wait = self._get_reconnect_wait(self._reconnects)
-            self._log.debug(
+            logger.debug(
                 f"websocket reconnecting. {self.MAX_RECONNECTS - self._reconnects} reconnects left - "
                 f"waiting {reconnect_wait}"
             )
             await asyncio.sleep(reconnect_wait)
             await self.connect()
         else:
-            self._log.error(f'Max reconnections {self.MAX_RECONNECTS} reached:')
-            raise BinanceWebsocketUnableToConnect
+            logger.error(f'Max reconnections {self.MAX_RECONNECTS} reached:')
+            raise WebsocketUnableToConnect
 
     def add_event_handler(
             self,
@@ -205,10 +205,10 @@ class ReconnectingWebsocket:
     async def send(self, msg: Dict):
         msg = json.dumps(msg)
         try:
-            self._log.info(f"Sending: {msg}")
+            logger.info(f"Sending: {msg}")
             await self.ws.send(msg)
         except ConnectionClosed:
-            self._log.debug(f"Can't send the message connection closed")
+            logger.debug(f"Can't send the message connection closed")
         return
 
     async def _wait_for_reconnect(self):
@@ -226,7 +226,7 @@ class ReconnectingWebsocket:
         self._reconnects += 1
 
     def _no_message_received_reconnect(self):
-        self._log.debug('No message received, reconnecting')
+        logger.debug('No message received, reconnecting')
         self.ws_state = WSListenerState.RECONNECTING
 
     async def _reconnect(self):
@@ -328,23 +328,23 @@ class KeepAliveWebsocket(ReconnectingWebsocket):
     async def _keepalive_socket(self):
         try:
             listen_key = await self._get_listen_key()
-            if listen_key != self._path:
-                self._log.debug("listen key changed: reconnect")
+            if listen_key != self._listen_key:
+                logger.info("listen key changed: reconnect")
                 self._listen_key = listen_key
                 await self._reconnect()
             else:
-                self._log.debug("listen key same: keepalive")
+                logger.info("listen key same: keepalive")
                 if self.socket_type == SocketType.ACCOUNT:
-                    await self.client.stream_keepalive(self._path)
+                    await self.client.stream_keepalive(self._listen_key)
                 elif self.socket_type == SocketType.SPOT:  # cross-margin
-                    await self.client.margin_stream_keepalive(self._path)
+                    await self.client.margin_stream_keepalive(self._listen_key)
                 elif self.socket_type == SocketType.USD_M_FUTURES:
-                    await self.client.futures_stream_keepalive(self._path)
+                    await self.client.futures_stream_keepalive(self._listen_key)
                 elif self.socket_type == SocketType.COIN_M_FUTURES:
-                    await self.client.futures_coin_stream_keepalive(self._path)
+                    await self.client.futures_coin_stream_keepalive(self._listen_key)
                 else:  # isolated margin
                     # Passing symbol for isolated margin
-                    await self.client.isolated_margin_stream_keepalive(self.socket_type, self._path)
+                    await self.client.isolated_margin_stream_keepalive(self.socket_type, self._listen_key)
         except Exception:
             pass  # Ignore
         finally:
