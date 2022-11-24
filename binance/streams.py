@@ -11,15 +11,7 @@ from .sockets import KeepAliveWebsocket, ReconnectingWebsocket
 KEEPALIVE_TIMEOUT = 5 * 60  # 5 minutes
 
 
-class BinanceSocketType(str, Enum):
-    SPOT = 'Spot'
-    USD_M_FUTURES = 'USD_M_Futures'
-    COIN_M_FUTURES = 'Coin_M_Futures'
-    OPTIONS = 'Vanilla_Options'
-    ACCOUNT = 'Account'
-
-
-class BinanceSocketManager:
+class SocketManager:
     STREAM_URL = 'wss://stream.binance.{}:9443/'
     STREAM_TESTNET_URL = 'wss://testnet.binance.vision/'
     FSTREAM_URL = 'wss://fstream.binance.{}/'
@@ -33,8 +25,8 @@ class BinanceSocketManager:
     WEBSOCKET_DEPTH_10 = '10'
     WEBSOCKET_DEPTH_20 = '20'
 
-    def __init__(self, client: Client, user_timeout=KEEPALIVE_TIMEOUT):
-        """Initialise the BinanceSocketManager
+    def __init__(self, client: AsyncClient, user_timeout=KEEPALIVE_TIMEOUT, socket_class=KeepAliveWebsocket):
+        """Initialise the SocketManager
 
         :param client: Binance API client
         :type client: binance.AsyncClient

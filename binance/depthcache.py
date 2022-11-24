@@ -4,7 +4,7 @@ import asyncio
 import time
 from typing import Optional, Dict, Callable
 
-from .streams import BinanceSocketManager
+from .streams import SocketManager
 
 
 class DepthCache(object):
@@ -143,7 +143,7 @@ class BaseDepthCacheManager:
         :param refresh_interval: Optional number of seconds between cache refresh, use 0 or None to disable
         :type refresh_interval: int
         :param bm: Optional BinanceSocketManager
-        :type bm: BinanceSocketManager
+        :type bm: SocketManager
         :param limit: Optional number of orders to get from orderbook
         :type limit: int
         :param conv_type: Optional type to represent price, and amount, default is float.
@@ -157,7 +157,7 @@ class BaseDepthCacheManager:
         self._symbol = symbol
         self._limit = limit
         self._last_update_id = None
-        self._bm = bm or BinanceSocketManager(self._client, self._loop)
+        self._bm = bm or SocketManager(self._client, self._loop)
         self._refresh_interval = refresh_interval or self.DEFAULT_REFRESH
         self._conn_key = None
         self._conv_type = conv_type
