@@ -1,11 +1,10 @@
 import asyncio
-from enum import Enum
 from typing import Optional, List
 
 from .client import AsyncClient
 from .enums import FuturesType, SocketType, ContractType
 
-from .sockets import KeepAliveWebsocket, ReconnectingWebsocket
+from .sockets import KeepAliveWebsocket
 
 KEEPALIVE_TIMEOUT = 5 * 60  # 5 minutes
 
@@ -43,10 +42,13 @@ class SocketManager:
         self._user_timeout = user_timeout
 
         self.testnet = self._client.testnet
+        self.socket_class = socket_class
 
     def _get_stream_url(self, stream_url: Optional[str] = None):
         if stream_url:
             return stream_url
+
+        # TODO: replace with socket type check
         stream_url = self.STREAM_URL
         if self.testnet:
             stream_url = self.STREAM_TESTNET_URL
@@ -54,39 +56,14 @@ class SocketManager:
 
     def _get_socket(
             self, path: str, stream_url: Optional[str] = None, prefix: str = 'ws/', is_binary: bool = False,
-            socket_type: BinanceSocketType = BinanceSocketType.SPOT
+            socket_type: SocketType = SocketType.SPOT
     ) -> str:
         conn_id = f'{socket_type}_{path}'
         if conn_id not in self._conns:
-
-            self._conns[conn_id] = KeepAliveWebsocket(
+            self._conns[conn_id] = self.socket_class(
                 client=self._client,
                 url=self._get_stream_url(stream_url),
-                keepalive_type=socket_type,
-                prefix=prefix,
-                exit_coro=self._exit_socket,
-                is_binary=is_binary,
-                user_timeout=self._user_timeout
-            )
-            # ReconnectingWebsocket(
-            #     path=path,
-            #     url=self._get_stream_url(stream_url),
-            #     prefix=prefix,
-            #     exit_coro=self._exit_socket,
-            #     is_binary=is_binary
-            # )
-
-        return self._conns[conn_id]
-
-    def _get_account_socket(
-            self, path: str, stream_url: Optional[str] = None, prefix: str = 'ws/', is_binary: bool = False
-    ):
-        conn_id = f'{BinanceSocketType.ACCOUNT}_{path}'
-        if conn_id not in self._conns:
-            self._conns[conn_id] = KeepAliveWebsocket(
-                client=self._client,
-                url=self._get_stream_url(stream_url),
-                keepalive_type=path,
+                socket_type=socket_type,
                 prefix=prefix,
                 exit_coro=self._exit_socket,
                 is_binary=is_binary,
@@ -96,7 +73,7 @@ class SocketManager:
         return self._conns[conn_id]
 
     def _get_futures_socket(self, path: str, futures_type: FuturesType, prefix: str = 'stream?streams='):
-        socket_type: BinanceSocketType = BinanceSocketType.USD_M_FUTURES
+        socket_type: SocketType = SocketType.USD_M_FUTURES
         if futures_type == FuturesType.USD_M:
             stream_url = self.FSTREAM_URL
             if self.testnet:
@@ -111,7 +88,7 @@ class SocketManager:
         stream_url = self.VSTREAM_URL
         if self.testnet:
             stream_url = self.VSTREAM_TESTNET_URL
-        return self._get_socket(path, stream_url, prefix, is_binary=True, socket_type=BinanceSocketType.OPTIONS)
+        return self._get_socket(path, stream_url, prefix, is_binary=True, socket_type=SocketType.OPTIONS)
 
     async def _exit_socket(self, path: str):
         await self._stop_socket(path)
@@ -781,7 +758,7 @@ class SocketManager:
 
         Message Format - see Binance API docs for all types
         """
-        return self._get_account_socket('user')
+        return self._get_socket('user', socket_type=SocketType.ACCOUNT)
 
     def futures_user_socket(self):
         """Start a websocket for coin futures user data
@@ -793,7 +770,7 @@ class SocketManager:
         Message Format - see Binanace API docs for all types
         """
 
-        return self._get_account_socket('futures', stream_url=self.FSTREAM_URL)
+        return self._get_socket('futures', socket_type=SocketType.USD_M_FUTURES)
 
     def margin_socket(self):
         """Start a websocket for cross-margin data
@@ -804,7 +781,7 @@ class SocketManager:
 
         Message Format - see Binance API docs for all types
         """
-        return self._get_account_socket('margin')
+        return self._get_socket('margin', socket_type=SocketType.USD_M_FUTURES)
 
     def futures_socket(self):
         """Start a websocket for futures data
@@ -815,7 +792,7 @@ class SocketManager:
 
         Message Format - see Binance API docs for all types
         """
-        return self._get_account_socket('futures', stream_url=self.FSTREAM_URL)
+        return self._get_socket('futures', stream_url=self.FSTREAM_URL, socket_type=SocketType.USD_M_FUTURES)
 
     def coin_futures_socket(self):
         """Start a websocket for coin futures data
@@ -829,7 +806,7 @@ class SocketManager:
         stream_url = self.DSTREAM_URL
         if self.testnet:
             stream_url = self.DSTREAM_TESTNET_URL
-        return self._get_account_socket('coin_futures', stream_url=stream_url)
+        return self._get_socket('coin_futures', stream_url=stream_url, socket_type=SocketType.COIN_M_FUTURES)
 
     def isolated_margin_socket(self, symbol: str):
         """Start a websocket for isolated margin data
@@ -843,7 +820,7 @@ class SocketManager:
 
         Message Format - see Binance API docs for all types
         """
-        return self._get_account_socket(symbol)
+        return self._get_socket(symbol, socket_type=SocketType.SPOT)
 
     def options_ticker_socket(self, symbol: str):
         """Subscribe to a 24 hour ticker info stream

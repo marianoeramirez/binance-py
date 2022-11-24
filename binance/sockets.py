@@ -9,6 +9,7 @@ from socket import gaierror
 from typing import Optional, Dict
 
 import websockets as ws
+from .enums import SocketType
 from websockets.exceptions import ConnectionClosedError, ConnectionClosed
 
 from .client import AsyncClient
@@ -37,8 +38,14 @@ class ReconnectingWebsocket:
     NO_MESSAGE_RECONNECT_TIMEOUT = 60
 
     def __init__(
-            self, url: str, path: Optional[str] = None, prefix: str = 'ws/', is_binary: bool = False, exit_coro=None
+            self, client: AsyncClient, url: str, path: Optional[str] = None,
+            prefix: str = 'ws/',
+            is_binary: bool = False, exit_coro=None,
+            socket_type: SocketType = None,
+            user_timeout=None
     ):
+        self.client = client
+        self.socket_type = socket_type
         self._loop = asyncio.get_event_loop()
         self._log = logging.getLogger(__name__)
         self._path = path
@@ -52,6 +59,9 @@ class ReconnectingWebsocket:
         self.ws: Optional[ws.WebSocketClientProtocol] = None  # type: ignore
         self.ws_state = WSListenerState.INITIALISING
         self._handle_read_loop = None
+
+        self._user_timeout = user_timeout or KEEPALIVE_TIMEOUT
+        self._timer = None
 
         self._disconnected = asyncio.get_event_loop().create_future()
         self._disconnected.set_result(None)
@@ -78,7 +88,7 @@ class ReconnectingWebsocket:
     async def connect(self):
         await self._before_connect()
         ws_url = self._url + self._prefix + self._path
-        # ws_url = "ws://localhost:8765"
+        self._log.debug(f"WSURL: {ws_url}")
         self._conn = ws.connect(ws_url, close_timeout=0.1)  # type: ignore
 
         try:
@@ -270,17 +280,6 @@ class ReconnectingWebsocket:
 
 
 class KeepAliveWebsocket(ReconnectingWebsocket):
-
-    def __init__(
-            self, client: AsyncClient, url, keepalive_type, prefix='ws/', is_binary=False, exit_coro=None,
-            user_timeout=None
-    ):
-        super().__init__(path=None, url=url, prefix=prefix, is_binary=is_binary, exit_coro=exit_coro)
-        self._keepalive_type = keepalive_type
-        self._client = client
-        self._user_timeout = user_timeout or KEEPALIVE_TIMEOUT
-        self._timer = None
-
     async def __aexit__(self, *args, **kwargs):
         if not self._path:
             return
@@ -304,18 +303,17 @@ class KeepAliveWebsocket(ReconnectingWebsocket):
         )
 
     async def _get_listen_key(self):
-        from binance.streams import BinanceSocketType
-        if self._keepalive_type == BinanceSocketType.ACCOUNT:
-            listen_key = await self._client.stream_get_listen_key()
-        elif self._keepalive_type == BinanceSocketType.SPOT:  # cross-margin
-            listen_key = await self._client.margin_stream_get_listen_key()
-        elif self._keepalive_type == BinanceSocketType.USD_M_FUTURES:
-            listen_key = await self._client.futures_stream_get_listen_key()
-        elif self._keepalive_type == BinanceSocketType.COIN_M_FUTURES:
-            listen_key = await self._client.futures_coin_stream_get_listen_key()
+        if self.socket_type == SocketType.ACCOUNT:
+            listen_key = await self.client.stream_get_listen_key()
+        elif self.socket_type == SocketType.SPOT:  # cross-margin
+            listen_key = await self.client.margin_stream_get_listen_key()
+        elif self.socket_type == SocketType.USD_M_FUTURES:
+            listen_key = await self.client.futures_stream_get_listen_key()
+        elif self.socket_type == SocketType.COIN_M_FUTURES:
+            listen_key = await self.client.futures_coin_stream_get_listen_key()
         else:  # isolated margin
             # Passing symbol for isolated margin
-            listen_key = await self._client.isolated_margin_stream_get_listen_key(self._keepalive_type)
+            listen_key = await self.client.isolated_margin_stream_get_listen_key(self.socket_type)
         return listen_key
 
     async def _keepalive_socket(self):
@@ -327,17 +325,17 @@ class KeepAliveWebsocket(ReconnectingWebsocket):
                 await self._reconnect()
             else:
                 self._log.debug("listen key same: keepalive")
-                if self._keepalive_type == 'user':
-                    await self._client.stream_keepalive(self._path)
-                elif self._keepalive_type == 'margin':  # cross-margin
-                    await self._client.margin_stream_keepalive(self._path)
-                elif self._keepalive_type == 'futures':
-                    await self._client.futures_stream_keepalive(self._path)
-                elif self._keepalive_type == 'coin_futures':
-                    await self._client.futures_coin_stream_keepalive(self._path)
+                if self.socket_type == 'user':
+                    await self.client.stream_keepalive(self._path)
+                elif self.socket_type == 'margin':  # cross-margin
+                    await self.client.margin_stream_keepalive(self._path)
+                elif self.socket_type == 'futures':
+                    await self.client.futures_stream_keepalive(self._path)
+                elif self.socket_type == 'coin_futures':
+                    await self.client.futures_coin_stream_keepalive(self._path)
                 else:  # isolated margin
                     # Passing symbol for isolated margin
-                    await self._client.isolated_margin_stream_keepalive(self._keepalive_type, self._path)
+                    await self.client.isolated_margin_stream_keepalive(self.socket_type, self._path)
         except Exception:
             pass  # Ignore
         finally:
