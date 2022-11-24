@@ -86,3 +86,15 @@ class SocketType(Enum):
     COIN_M_FUTURES = 'Coin_M_Futures'
     OPTIONS = 'Vanilla_Options'
     ACCOUNT = 'Account'
+
+
+class WSListenerState(Enum):
+    INITIALISING = 'Initialising'
+    STREAMING = 'Streaming'
+    RECONNECTING = 'Reconnecting'
+    EXITING = 'Exiting'
+
+
+class EventType(Enum):
+    NEW_MESSAGE = 'new_message'
+    ON_CONNECT = 'on_connect'

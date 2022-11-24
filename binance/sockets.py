@@ -3,13 +3,12 @@ import gzip
 import json
 import logging
 from asyncio import sleep
-from enum import Enum
 from random import random
 from socket import gaierror
 from typing import Optional, Dict
 
 import websockets as ws
-from .enums import SocketType
+from .enums import SocketType, EventType, WSListenerState
 from websockets.exceptions import ConnectionClosedError, ConnectionClosed
 
 from .client import AsyncClient
@@ -18,17 +17,6 @@ from .exceptions import WebsocketUnableToConnect
 KEEPALIVE_TIMEOUT = 5 * 60  # 5 minutes
 
 logger = logging.getLogger(__name__)
-
-class WSListenerState(Enum):
-    INITIALISING = 'Initialising'
-    STREAMING = 'Streaming'
-    RECONNECTING = 'Reconnecting'
-    EXITING = 'Exiting'
-
-
-class EventType(Enum):
-    NEW_MESSAGE = 'new_message'
-    ON_CONNECT = 'on_connect'
 
 
 class ReconnectingWebsocket:
@@ -309,7 +297,7 @@ class KeepAliveWebsocket(ReconnectingWebsocket):
         if self._listen_key:
             param = f"?listenKey={self._listen_key}"
         path = self._path or ''
-        return self._url + self._prefix +  path + param
+        return self._url + self._prefix + path + param
 
     async def _get_listen_key(self):
         if self.socket_type == SocketType.ACCOUNT:
