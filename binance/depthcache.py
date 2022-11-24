@@ -2,7 +2,7 @@ import logging
 from operator import itemgetter
 import asyncio
 import time
-from typing import Optional, Dict, Callable
+from typing import Callable
 
 from .streams import SocketManager
 
@@ -414,4 +414,3 @@ class OptionsDepthCacheManager(BaseDepthCacheManager):
 
     def _get_socket(self):
         return self._bm.options_depth_socket(self._symbol)
-
