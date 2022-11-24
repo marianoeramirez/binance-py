@@ -11,7 +11,7 @@ from urllib.parse import urlencode
 
 
 from .helpers import interval_to_milliseconds, convert_ts_str
-from .exceptions import BinanceAPIException, BinanceRequestException, NotImplementedException
+from .exceptions import APIException, RequestException, NotImplementedException
 from .enums import HistoricalKlinesType
 
 
@@ -321,11 +321,11 @@ class Client(BaseClient):
         response.
         """
         if not (200 <= response.status_code < 300):
-            raise BinanceAPIException(response, response.status_code, response.text)
+            raise APIException(response, response.status_code, response.text)
         try:
             return response.json()
         except ValueError:
-            raise BinanceRequestException('Invalid Response: %s' % response.text)
+            raise RequestException('Invalid Response: %s' % response.text)
 
     def _request_api(
         self, method, path: str, signed: bool = False, version=BaseClient.PUBLIC_API_VERSION, **kwargs
@@ -388,7 +388,7 @@ class Client(BaseClient):
 
         :returns: list - List of product dictionaries
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         products = self._request_website('get', 'exchange-api/v1/public/asset-service/product/get-products')
@@ -452,7 +452,7 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
 
@@ -495,7 +495,7 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
 
@@ -520,7 +520,7 @@ class Client(BaseClient):
 
             {}
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('ping', version=self.PRIVATE_API_VERSION)
@@ -538,7 +538,7 @@ class Client(BaseClient):
                 "serverTime": 1499827319559
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('time', version=self.PRIVATE_API_VERSION)
@@ -565,7 +565,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('ticker/price', version=self.PRIVATE_API_VERSION)
@@ -599,7 +599,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('ticker/bookTicker', version=self.PRIVATE_API_VERSION)
@@ -636,7 +636,7 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('depth', data=params, version=self.PRIVATE_API_VERSION)
@@ -666,7 +666,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('trades', data=params)
@@ -698,7 +698,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('historicalTrades', data=params, version=self.PRIVATE_API_VERSION)
@@ -737,7 +737,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('aggTrades', data=params, version=self.PRIVATE_API_VERSION)
@@ -862,7 +862,7 @@ class Client(BaseClient):
                 ]
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('klines', data=params, version=self.PRIVATE_API_VERSION)
@@ -1187,7 +1187,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('ticker/24hr', data=params, version=self.PRIVATE_API_VERSION)
@@ -1224,7 +1224,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('ticker/price', data=params, version=self.PRIVATE_API_VERSION)
@@ -1270,7 +1270,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('ticker/bookTicker', data=params, version=self.PRIVATE_API_VERSION)
@@ -1391,7 +1391,7 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException, BinanceOrderException, BinanceOrderMinAmountException, BinanceOrderMinPriceException, BinanceOrderMinTotalException, BinanceOrderUnknownSymbolException, BinanceOrderInactiveSymbolException
+        :raises: RequestException, APIException, OrderException, OrderMinAmountException, OrderMinPriceException, OrderMinTotalException, OrderUnknownSymbolException, OrderInactiveSymbolException
 
         """
         return self._post('order', True, data=params)
@@ -1424,7 +1424,7 @@ class Client(BaseClient):
 
         See order endpoint for full response options
 
-        :raises: BinanceRequestException, BinanceAPIException, BinanceOrderException, BinanceOrderMinAmountException, BinanceOrderMinPriceException, BinanceOrderMinTotalException, BinanceOrderUnknownSymbolException, BinanceOrderInactiveSymbolException
+        :raises: RequestException, APIException, OrderException, OrderMinAmountException, OrderMinPriceException, OrderMinTotalException, OrderUnknownSymbolException, OrderInactiveSymbolException
 
         """
         params.update({
@@ -1461,7 +1461,7 @@ class Client(BaseClient):
 
         See order endpoint for full response options
 
-        :raises: BinanceRequestException, BinanceAPIException, BinanceOrderException, BinanceOrderMinAmountException, BinanceOrderMinPriceException, BinanceOrderMinTotalException, BinanceOrderUnknownSymbolException, BinanceOrderInactiveSymbolException
+        :raises: RequestException, APIException, OrderException, OrderMinAmountException, OrderMinPriceException, OrderMinTotalException, OrderUnknownSymbolException, OrderInactiveSymbolException
 
         """
         params.update({
@@ -1495,7 +1495,7 @@ class Client(BaseClient):
 
         See order endpoint for full response options
 
-        :raises: BinanceRequestException, BinanceAPIException, BinanceOrderException, BinanceOrderMinAmountException, BinanceOrderMinPriceException, BinanceOrderMinTotalException, BinanceOrderUnknownSymbolException, BinanceOrderInactiveSymbolException
+        :raises: RequestException, APIException, OrderException, OrderMinAmountException, OrderMinPriceException, OrderMinTotalException, OrderUnknownSymbolException, OrderInactiveSymbolException
 
         """
         params.update({
@@ -1526,7 +1526,7 @@ class Client(BaseClient):
 
         See order endpoint for full response options
 
-        :raises: BinanceRequestException, BinanceAPIException, BinanceOrderException, BinanceOrderMinAmountException, BinanceOrderMinPriceException, BinanceOrderMinTotalException, BinanceOrderUnknownSymbolException, BinanceOrderInactiveSymbolException
+        :raises: RequestException, APIException, OrderException, OrderMinAmountException, OrderMinPriceException, OrderMinTotalException, OrderUnknownSymbolException, OrderInactiveSymbolException
 
         """
         params.update({
@@ -1554,7 +1554,7 @@ class Client(BaseClient):
 
         See order endpoint for full response options
 
-        :raises: BinanceRequestException, BinanceAPIException, BinanceOrderException, BinanceOrderMinAmountException, BinanceOrderMinPriceException, BinanceOrderMinTotalException, BinanceOrderUnknownSymbolException, BinanceOrderInactiveSymbolException
+        :raises: RequestException, APIException, OrderException, OrderMinAmountException, OrderMinPriceException, OrderMinTotalException, OrderUnknownSymbolException, OrderInactiveSymbolException
 
         """
         params.update({
@@ -1582,7 +1582,7 @@ class Client(BaseClient):
 
         See order endpoint for full response options
 
-        :raises: BinanceRequestException, BinanceAPIException, BinanceOrderException, BinanceOrderMinAmountException, BinanceOrderMinPriceException, BinanceOrderMinTotalException, BinanceOrderUnknownSymbolException, BinanceOrderInactiveSymbolException
+        :raises: RequestException, APIException, OrderException, OrderMinAmountException, OrderMinPriceException, OrderMinTotalException, OrderUnknownSymbolException, OrderInactiveSymbolException
 
         """
         params.update({
@@ -1647,7 +1647,7 @@ class Client(BaseClient):
             {
             }
 
-        :raises: BinanceRequestException, BinanceAPIException, BinanceOrderException, BinanceOrderMinAmountException, BinanceOrderMinPriceException, BinanceOrderMinTotalException, BinanceOrderUnknownSymbolException, BinanceOrderInactiveSymbolException
+        :raises: RequestException, APIException, OrderException, OrderMinAmountException, OrderMinPriceException, OrderMinTotalException, OrderUnknownSymbolException, OrderInactiveSymbolException
 
         """
         return self._post('order/oco', True, data=params)
@@ -1686,7 +1686,7 @@ class Client(BaseClient):
 
         See OCO order endpoint for full response options
 
-        :raises: BinanceRequestException, BinanceAPIException, BinanceOrderException, BinanceOrderMinAmountException, BinanceOrderMinPriceException, BinanceOrderMinTotalException, BinanceOrderUnknownSymbolException, BinanceOrderInactiveSymbolException
+        :raises: RequestException, APIException, OrderException, OrderMinAmountException, OrderMinPriceException, OrderMinTotalException, OrderUnknownSymbolException, OrderInactiveSymbolException
 
         """
         params.update({
@@ -1728,7 +1728,7 @@ class Client(BaseClient):
 
         See OCO order endpoint for full response options
 
-        :raises: BinanceRequestException, BinanceAPIException, BinanceOrderException, BinanceOrderMinAmountException, BinanceOrderMinPriceException, BinanceOrderMinTotalException, BinanceOrderUnknownSymbolException, BinanceOrderInactiveSymbolException
+        :raises: RequestException, APIException, OrderException, OrderMinAmountException, OrderMinPriceException, OrderMinTotalException, OrderUnknownSymbolException, OrderInactiveSymbolException
 
         """
         params.update({
@@ -1768,7 +1768,7 @@ class Client(BaseClient):
 
             {}
 
-        :raises: BinanceRequestException, BinanceAPIException, BinanceOrderException, BinanceOrderMinAmountException, BinanceOrderMinPriceException, BinanceOrderMinTotalException, BinanceOrderUnknownSymbolException, BinanceOrderInactiveSymbolException
+        :raises: RequestException, APIException, OrderException, OrderMinAmountException, OrderMinPriceException, OrderMinTotalException, OrderUnknownSymbolException, OrderInactiveSymbolException
 
 
         """
@@ -1808,7 +1808,7 @@ class Client(BaseClient):
                 "time": 1499827319559
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('order', True, data=params)
@@ -1853,7 +1853,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('allOrders', True, data=params)
@@ -1885,7 +1885,7 @@ class Client(BaseClient):
                 "clientOrderId": "cancelMyOrder1"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._delete('order', True, data=params)
@@ -1922,7 +1922,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('openOrders', True, data=params)
@@ -1962,7 +1962,7 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('account', True, data=params)
@@ -1985,7 +1985,7 @@ class Client(BaseClient):
                 "locked": "0.00000000"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         res = self.get_account(**params)
@@ -2032,7 +2032,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._get('myTrades', True, data=params)
@@ -2051,7 +2051,7 @@ class Client(BaseClient):
                 "msg": "normal"     # normal or System maintenance.
             }
 
-        :raises: BinanceAPIException
+        :raises: APIException
 
         """
         return self._request_margin_api('get', 'system/status')
@@ -2308,7 +2308,7 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'asset/dust', True, data=params)
@@ -2355,7 +2355,7 @@ class Client(BaseClient):
                 "total":2
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'asset/assetDividend', True, data=params)
@@ -2387,7 +2387,7 @@ class Client(BaseClient):
             }
 
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'asset/transfer', signed=True, data=params)
@@ -2441,7 +2441,7 @@ class Client(BaseClient):
             }
 
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'asset/transfer', signed=True, data=params)
@@ -2547,7 +2547,7 @@ class Client(BaseClient):
                 "id":"7213fea8e94b4a5593d507237e5a555b"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         # force a name for the withdrawal if one not set
@@ -2606,7 +2606,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'capital/deposit/hisrec', True, data=params)
@@ -2660,7 +2660,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'capital/withdraw/history', True, data=params)
@@ -2699,7 +2699,7 @@ class Client(BaseClient):
                 "status": 4
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         result = self.get_withdraw_history(**params)
@@ -2733,7 +2733,7 @@ class Client(BaseClient):
                 "url": "https://btc.com/1HPn8Rx2y6nNSfagQBKy27GB99Vbzg89wv"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         params['coin'] = coin
@@ -2760,7 +2760,7 @@ class Client(BaseClient):
                 "listenKey": "pqia91ma19a5s61cv6a81va65sdf19v8a65a1a5s61cv6a81va65sdf19v8a65a1"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         res = self._post('userDataStream', False, data={}, version=self.PRIVATE_API_VERSION)
@@ -2780,7 +2780,7 @@ class Client(BaseClient):
 
             {}
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         params = {
@@ -2802,7 +2802,7 @@ class Client(BaseClient):
 
             {}
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         params = {
@@ -2865,7 +2865,7 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/account', True, data=params)
@@ -3049,7 +3049,7 @@ class Client(BaseClient):
                 "userMinRepay": "0.00000000"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/asset', data=params)
@@ -3081,7 +3081,7 @@ class Client(BaseClient):
             }
 
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/pair', data=params)
@@ -3118,7 +3118,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/allAssets', data=params)
@@ -3157,7 +3157,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/allPairs', data=params)
@@ -3186,7 +3186,7 @@ class Client(BaseClient):
             }
 
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'margin/isolated/create', signed=True, data=params)
@@ -3217,7 +3217,7 @@ class Client(BaseClient):
             }
 
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/isolated/pair', signed=True, data=params)
@@ -3255,7 +3255,7 @@ class Client(BaseClient):
             ]
 
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/isolated/allPairs', signed=True, data=params)
@@ -3284,7 +3284,7 @@ class Client(BaseClient):
             }
 
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'bnbBurn', signed=True, data=params)
@@ -3308,7 +3308,7 @@ class Client(BaseClient):
             }
 
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'bnbBurn', signed=True, data=params)
@@ -3335,7 +3335,7 @@ class Client(BaseClient):
                 "symbol": "BNBBTC"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/priceIndex', data=params)
@@ -3364,7 +3364,7 @@ class Client(BaseClient):
                 "tranId": 100000001
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         params['type'] = 2
@@ -3394,7 +3394,7 @@ class Client(BaseClient):
                 "tranId": 100000001
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         params['type'] = 1
@@ -3427,7 +3427,7 @@ class Client(BaseClient):
                 "tranId": 100000001
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         params['transFrom'] = "ISOLATED_MARGIN"
@@ -3461,7 +3461,7 @@ class Client(BaseClient):
                 "tranId": 100000001
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         params['transFrom'] = "SPOT"
@@ -3524,7 +3524,7 @@ class Client(BaseClient):
               "total": 2
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/isolated/transfer', signed=True, data=params)
@@ -3560,7 +3560,7 @@ class Client(BaseClient):
                 "tranId": 100000001
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'margin/loan', signed=True, data=params)
@@ -3598,7 +3598,7 @@ class Client(BaseClient):
                 "tranId": 100000001
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'margin/repay', signed=True, data=params)
@@ -3717,9 +3717,9 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException, BinanceOrderException, BinanceOrderMinAmountException,
-            BinanceOrderMinPriceException, BinanceOrderMinTotalException, BinanceOrderUnknownSymbolException,
-            BinanceOrderInactiveSymbolException
+        :raises: RequestException, APIException, OrderException, OrderMinAmountException,
+            OrderMinPriceException, OrderMinTotalException, OrderUnknownSymbolException,
+            OrderInactiveSymbolException
 
         """
         return self._request_margin_api('post', 'margin/order', signed=True, data=params)
@@ -3762,7 +3762,7 @@ class Client(BaseClient):
                 "side": "SELL"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('delete', 'margin/order', signed=True, data=params)
@@ -3806,7 +3806,7 @@ class Client(BaseClient):
                 "total": 1
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/loan', signed=True, data=params)
@@ -3856,7 +3856,7 @@ class Client(BaseClient):
                 "total": 1
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/repay', signed=True, data=params)
@@ -4017,7 +4017,7 @@ class Client(BaseClient):
                 "updateTime": 1562133008725
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/order', signed=True, data=params)
@@ -4064,7 +4064,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/openOrders', signed=True, data=params)
@@ -4123,7 +4123,7 @@ class Client(BaseClient):
             ]
 
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/allOrders', signed=True, data=params)
@@ -4181,7 +4181,7 @@ class Client(BaseClient):
             ]
 
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/myTrades', signed=True, data=params)
@@ -4204,7 +4204,7 @@ class Client(BaseClient):
                 "amount": "1.69248805"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/maxBorrowable', signed=True, data=params)
@@ -4227,7 +4227,7 @@ class Client(BaseClient):
                 "amount": "3.59498107"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'margin/maxTransferable', signed=True, data=params)
@@ -4335,9 +4335,9 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException, BinanceOrderException, BinanceOrderMinAmountException,
-            BinanceOrderMinPriceException, BinanceOrderMinTotalException, BinanceOrderUnknownSymbolException,
-            BinanceOrderInactiveSymbolException
+        :raises: RequestException, APIException, OrderException, OrderMinAmountException,
+            OrderMinPriceException, OrderMinTotalException, OrderUnknownSymbolException,
+            OrderInactiveSymbolException
 
         """
         return self._request_margin_api('post', 'margin/order/oco', signed=True, data=params)
@@ -4557,7 +4557,7 @@ class Client(BaseClient):
                 "listenKey": "pqia91ma19a5s61cv6a81va65sdf19v8a65a1a5s61cv6a81va65sdf19v8a65a1"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         res = self._request_margin_api('post', 'userDataStream', signed=False, data={})
@@ -4577,7 +4577,7 @@ class Client(BaseClient):
 
             {}
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         params = {
@@ -4599,7 +4599,7 @@ class Client(BaseClient):
 
             {}
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         params = {
@@ -4629,7 +4629,7 @@ class Client(BaseClient):
                 "listenKey":  "T3ee22BIYuWqmvne0HNq2A2WsFlEtLhvWCtItw6ffhhdmjifQ2tRbuKkTHhr"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         params = {
@@ -4654,7 +4654,7 @@ class Client(BaseClient):
 
             {}
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         params = {
@@ -4679,7 +4679,7 @@ class Client(BaseClient):
 
             {}
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         params = {
@@ -4783,7 +4783,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'lending/project/list', signed=True, data=params)
@@ -4865,7 +4865,7 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'sub-account/list', True, data=params)
@@ -4915,7 +4915,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'sub-account/sub/transfer/history', True, data=params)
@@ -4965,7 +4965,7 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'sub-account/futures/internalTransfer', True, data=params)
@@ -4997,7 +4997,7 @@ class Client(BaseClient):
                 "txnId":"2934662589"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'sub-account/futures/internalTransfer', True, data=params)
@@ -5046,7 +5046,7 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'sub-account/assets', True, data=params)
@@ -5084,7 +5084,7 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'sub-account/spotSummary', True, data=params)
@@ -5114,7 +5114,7 @@ class Client(BaseClient):
                 "url":"https://tronscan.org/#/address/TDunhSa7jkTNuKrusUTU1MUHtqXoBPKETV"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'capital/deposit/subAddress', True, data=params)
@@ -5172,7 +5172,7 @@ class Client(BaseClient):
                 }
            ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'capital/deposit/subHisrec', True, data=params)
@@ -5203,7 +5203,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'sub-account/status', True, data=params)
@@ -5230,7 +5230,7 @@ class Client(BaseClient):
 
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'sub-account/margin/enable', True, data=params)
@@ -5297,7 +5297,7 @@ class Client(BaseClient):
                   ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'sub-account/margin/account', True, data=params)
@@ -5334,7 +5334,7 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'sub-account/margin/accountSummary', True, data=params)
@@ -5361,7 +5361,7 @@ class Client(BaseClient):
 
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'sub-account/futures/enable', True, data=params)
@@ -5411,7 +5411,7 @@ class Client(BaseClient):
                 "updateTime": 1576756674610
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'sub-account/futures/account', True, data=params)
@@ -5463,7 +5463,7 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'sub-account/futures/accountSummary', True, data=params)
@@ -5495,7 +5495,7 @@ class Client(BaseClient):
                 }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'sub-account/futures/positionRisk', True, data=params)
@@ -5525,7 +5525,7 @@ class Client(BaseClient):
                 "txnId":"2966662589"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'sub-account/futures/transfer', True, data=params)
@@ -5553,7 +5553,7 @@ class Client(BaseClient):
                 "txnId":"2966662589"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'sub-account/margin/transfer', True, data=params)
@@ -5580,7 +5580,7 @@ class Client(BaseClient):
                 "txnId":"2966662589"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'sub-account/transfer/subToSub', True, data=params)
@@ -5605,7 +5605,7 @@ class Client(BaseClient):
                 "txnId":"2966662589"
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'sub-account/transfer/subToMaster', True, data=params)
@@ -5655,7 +5655,7 @@ class Client(BaseClient):
               }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'sub-account/transfer/subUserHistory', True, data=params)
@@ -5688,7 +5688,7 @@ class Client(BaseClient):
                 "tranId":11945860693
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'sub-account/universalTransfer', True, data=params)
@@ -5742,7 +5742,7 @@ class Client(BaseClient):
               }
             ]
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'sub-account/universalTransfer', True, data=params)
@@ -6615,7 +6615,7 @@ class Client(BaseClient):
                 ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'capital/config/getall', True, data=params)
@@ -6730,7 +6730,7 @@ class Client(BaseClient):
                ]
             }
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('get', 'accountSnapshot', True, data=params)
@@ -6745,7 +6745,7 @@ class Client(BaseClient):
 
         :returns: API response
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'disableFastWithdrawSwitch', True, data=params)
@@ -6760,7 +6760,7 @@ class Client(BaseClient):
 
         :returns: API response
 
-        :raises: BinanceRequestException, BinanceAPIException
+        :raises: RequestException, APIException
 
         """
         return self._request_margin_api('post', 'enableFastWithdrawSwitch', True, data=params)
@@ -7295,12 +7295,12 @@ class AsyncClient(BaseClient):
         response.
         """
         if not str(response.status).startswith('2'):
-            raise BinanceAPIException(response, response.status, await response.text())
+            raise APIException(response, response.status, await response.text())
         try:
             return await response.json()
         except ValueError:
             txt = await response.text()
-            raise BinanceRequestException(f'Invalid Response: {txt}')
+            raise RequestException(f'Invalid Response: {txt}')
 
     async def _request_api(self, method, path, signed=False, version=BaseClient.PUBLIC_API_VERSION, **kwargs):
         uri = self._create_api_uri(path, signed, version)

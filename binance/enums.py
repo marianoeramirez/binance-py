@@ -79,6 +79,7 @@ class ContractType(Enum):
     CURRENT_QUARTER = "current_quarter"
     NEXT_QUARTER = "next_quarter"
 
+
 class SocketType(Enum):
     SPOT = 'Spot'
     USD_M_FUTURES = 'USD_M_Futures'
