@@ -61,17 +61,7 @@ class ReconnectingWebsocket:
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        if self._exit_coro:
-            await self._exit_coro(self._path)
-        self.ws_state = WSListenerState.EXITING
-        if self.ws:
-            self.ws.fail_connection()
-        if self._conn and hasattr(self._conn, 'protocol'):
-            await self._conn.__aexit__(exc_type, exc_val, exc_tb)
-        self.ws = None
-        if not self._handle_read_loop:
-            logger.error("CANCEL read_loop")
-            await self._kill_read_loop()
+        await self.exit()
 
     def get_url(self):
         return self._url + self._prefix + self._path
@@ -94,6 +84,19 @@ class ReconnectingWebsocket:
         # To manage the "cannot call recv while another coroutine is already waiting for the next message"
         if not self._handle_read_loop:
             await self._read_loop()
+
+    async def exit(self):
+        if self._exit_coro:
+            await self._exit_coro(self._path)
+        self.ws_state = WSListenerState.EXITING
+        if self.ws:
+            self.ws.fail_connection()
+        if self._conn and hasattr(self._conn, 'protocol'):
+            await self._conn.__aexit__()
+        self.ws = None
+        if not self._handle_read_loop:
+            logger.error("CANCEL read_loop")
+            await self._kill_read_loop()
 
     async def _kill_read_loop(self):
         self.ws_state = WSListenerState.EXITING
