@@ -1,6 +1,6 @@
 import asyncio
 import gzip
-import json
+import ujson as json
 import logging
 from asyncio import sleep
 from random import random
