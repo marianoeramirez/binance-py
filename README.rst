@@ -2,7 +2,7 @@
 Welcome to binance-py v1.0.0
 =================================
 
-Updated 9th Apr 2022
+Updated 24th Nov 2022
 
 .. image:: https://img.shields.io/pypi/v/binance-py.svg
     :target: https://pypi.python.org/pypi/binance-py
