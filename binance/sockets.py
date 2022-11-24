@@ -85,10 +85,13 @@ class ReconnectingWebsocket:
             self._log.error("CANCEL read_loop")
             await self._kill_read_loop()
 
+    def get_url(self):
+        return self._url + self._prefix + self._path
+
     async def connect(self):
         await self._before_connect()
-        ws_url = self._url + self._prefix + self._path
-        self._log.debug(f"WSURL: {ws_url}")
+        ws_url = self.get_url()
+        self._log.info(f"WSURL: {ws_url}")
         self._conn = ws.connect(ws_url, close_timeout=0.1)  # type: ignore
 
         try:
@@ -289,8 +292,7 @@ class KeepAliveWebsocket(ReconnectingWebsocket):
         await super().__aexit__(*args, **kwargs)
 
     async def _before_connect(self):
-        if not self._path:
-            self._path = await self._get_listen_key()
+        self._listen_key = await self._get_listen_key()
 
     async def _after_connect(self):
         await super(KeepAliveWebsocket, self)._after_connect()
@@ -301,6 +303,13 @@ class KeepAliveWebsocket(ReconnectingWebsocket):
             self._user_timeout,
             lambda: asyncio.create_task(self._keepalive_socket())
         )
+
+    def get_url(self):
+        param = ''
+        if self._listen_key:
+            param = f"?listenKey={self._listen_key}"
+        path = self._path or ''
+        return self._url + self._prefix +  path + param
 
     async def _get_listen_key(self):
         if self.socket_type == SocketType.ACCOUNT:
@@ -321,17 +330,17 @@ class KeepAliveWebsocket(ReconnectingWebsocket):
             listen_key = await self._get_listen_key()
             if listen_key != self._path:
                 self._log.debug("listen key changed: reconnect")
-                self._path = listen_key
+                self._listen_key = listen_key
                 await self._reconnect()
             else:
                 self._log.debug("listen key same: keepalive")
-                if self.socket_type == 'user':
+                if self.socket_type == SocketType.ACCOUNT:
                     await self.client.stream_keepalive(self._path)
-                elif self.socket_type == 'margin':  # cross-margin
+                elif self.socket_type == SocketType.SPOT:  # cross-margin
                     await self.client.margin_stream_keepalive(self._path)
-                elif self.socket_type == 'futures':
+                elif self.socket_type == SocketType.USD_M_FUTURES:
                     await self.client.futures_stream_keepalive(self._path)
-                elif self.socket_type == 'coin_futures':
+                elif self.socket_type == SocketType.COIN_M_FUTURES:
                     await self.client.futures_coin_stream_keepalive(self._path)
                 else:  # isolated margin
                     # Passing symbol for isolated margin
