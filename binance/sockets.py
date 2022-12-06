@@ -168,6 +168,7 @@ class ReconnectingWebsocket:
                     break
                 except Exception as e:
                     logger.debug(f"Unknown exception ({e})")
+                    logger.error(e)
                     continue
         finally:
             self._handle_read_loop = None  # Signal the coro is stopped
