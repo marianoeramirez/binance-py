@@ -77,7 +77,7 @@ class ReconnectingWebsocket:
         try:
             self.ws = await self._conn.__aenter__()
         except Exception as e:  # noqa
-            logger.error(e)
+            logger.exception(e)
             await self._reconnect()
             return
         self.ws_state = WSListenerState.STREAMING
@@ -168,7 +168,7 @@ class ReconnectingWebsocket:
                     break
                 except Exception as e:
                     logger.debug(f"Unknown exception ({e})")
-                    logger.error(e)
+                    logger.exception(e)
                     continue
         finally:
             self._handle_read_loop = None  # Signal the coro is stopped
@@ -339,7 +339,7 @@ class KeepAliveWebsocket(ReconnectingWebsocket):
                 else:  # isolated margin
                     # Passing symbol for isolated margin
                     await self.client.isolated_margin_stream_keepalive(self.socket_type, self._listen_key)
-        except Exception:
-            pass  # Ignore
+        except Exception as e:
+            logger.exception(e)
         finally:
             self._start_socket_timer()
