@@ -276,7 +276,47 @@ class ReconnectingWebsocket:
         #     # self.disconnect()
 
 
+import asyncio
+from contextlib import suppress
+
+
+class Periodic:
+    def __init__(self, func, time):
+        self.func = func
+        self.time = time
+        self.is_started = False
+        self._task = None
+
+    async def start(self):
+        logger.debug('Periodic Start')
+        if not self.is_started:
+            self.is_started = True
+            # Start task to call func periodically:
+            self._task = asyncio.ensure_future(self._run())
+
+    async def stop(self):
+        logger.debug('Periodic stop')
+        if self.is_started:
+            self.is_started = False
+            # Stop task and await it stopped:
+            self._task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._task
+
+    async def _run(self):
+        logger.debug('Periodic Run')
+        while True:
+            await asyncio.sleep(self.time)
+            await self.func()
+
+
 class KeepAliveWebsocket(ReconnectingWebsocket):
+
+    def __init__(self, client: AsyncClient, url: str, path: Optional[str] = None, prefix: str = 'ws/',
+                 is_binary: bool = False, exit_coro=None, socket_type: SocketType = None, user_timeout=None):
+        super().__init__(client, url, path, prefix, is_binary, exit_coro, socket_type, user_timeout)
+        self._keepalive_periodic = Periodic(self._keepalive_socket, 20)
+
     async def __aexit__(self, *args, **kwargs):
         if not self._path:
             return
@@ -290,13 +330,14 @@ class KeepAliveWebsocket(ReconnectingWebsocket):
 
     async def _after_connect(self):
         await super(KeepAliveWebsocket, self)._after_connect()
-        self._start_socket_timer()
+        await self._start_socket_timer()
 
-    def _start_socket_timer(self):
+    async def _start_socket_timer(self):
         self._timer = self._loop.call_later(
             self._user_timeout,
             lambda: asyncio.create_task(self._keepalive_socket())
         )
+        await self._keepalive_periodic.start()
 
     def get_url(self):
         param = ''
@@ -341,5 +382,3 @@ class KeepAliveWebsocket(ReconnectingWebsocket):
                     await self.client.isolated_margin_stream_keepalive(self.socket_type, self._listen_key)
         except Exception as e:
             logger.exception(e)
-        finally:
-            self._start_socket_timer()
