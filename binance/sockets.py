@@ -136,17 +136,22 @@ class ReconnectingWebsocket:
             while True:
                 try:
                     if self.ws_state == WSListenerState.RECONNECTING:
+                        logger.info(f"Status RECONNECTING")
                         await self._run_reconnect()
 
                     if not self.ws or self.ws_state != WSListenerState.STREAMING:
+                        logger.info(f"Status STREAMING")
                         await self._wait_for_reconnect()
                         break
                     elif self.ws_state == WSListenerState.EXITING:
+                        logger.info(f"Status EXITING")
                         break
                     elif self.ws.state == State.CLOSING:  # type: ignore
+                        logger.info(f"Status CLOSING")
                         await asyncio.sleep(0.1)
                         continue
                     elif self.ws.state == State.CLOSED:  # type: ignore
+                        logger.info(f"Status Closed")
                         await self._reconnect()
                     elif self.ws_state == WSListenerState.STREAMING:
                         res = await asyncio.wait_for(self.ws.recv(), timeout=self.TIMEOUT)
