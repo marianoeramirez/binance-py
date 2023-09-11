@@ -12,7 +12,7 @@ KEEPALIVE_TIMEOUT = 5 * 60  # 5 minutes
 class SocketManager:
     STREAM_URL = 'wss://stream.binance.{}:9443/'
     STREAM_TESTNET_URL = 'wss://testnet.binance.vision/'
-    FSTREAM_URL = 'wss://fstream.binance.{}/'
+    FSTREAM_URL = 'wss://fstream-auth.binance.{}/'
     FSTREAM_TESTNET_URL = 'wss://stream.binancefuture.com/'
     DSTREAM_URL = 'wss://dstream.binance.{}/'
     DSTREAM_TESTNET_URL = 'wss://dstream.binancefuture.com/'
